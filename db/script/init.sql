@@ -1,0 +1,27 @@
+CREATE DATABASE IF NOT EXISTS libdb;
+
+USE libdb;
+
+-- *
+-- Books
+-- * *
+
+CREATE TABLE IF NOT EXISTS books (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255),
+    genre VARCHAR(90),
+    author_id INT,
+    realese_date DATETIME,
+    description TEXT
+);
+
+INSERT INTO books (id, title, genre, author_id, release_date, description)
+VALUES (10, `To Kill a Mockingbird`, `Fiction`, 1, `1960-07-11`,
+        `A novel by Harper Lee set in the American South during the 1930s, addressing issues of racial injustice and moral growth.`),
+       (20, `1984`, `Dystopian Fiction`, 2, `1949-06-08`,
+        `A dystopian novel by George Orwell depicting a totalitarian regime and the struggles of the protagonist against it.`),
+       (30, `Pride and Prejudice`, `Romance`, 3, `1813-01-28`,
+        `A romantic novel by Jane Austen focusing on the manners and morals of the British landed gentry at the turn of the 19th century.`),
+       (40, `The Great Gatsby`, `Fiction`, 4, `1925-04-10`,
+        `A novel by F. Scott Fitzgerald set in the Roaring Twenties, exploring themes of decadence, idealism, and the American Dream.`),
+       (50, `Harry Potter and the Philosopher's Stone`, `Fantasy`, 5, `1997-06-26`, `The first book in the Harry Potter series by J.K. Rowling, following the journey of a young wizard, Harry Potter, and his friends at Hogwarts School of Witchcraft and Wizardry.`);
