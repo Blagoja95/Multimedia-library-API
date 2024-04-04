@@ -1,5 +1,9 @@
 <?php
 
+namespace database;
+
+use PDO;
+
 abstract class Database
 {
     public $connection;
