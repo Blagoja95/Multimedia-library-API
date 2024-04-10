@@ -14,6 +14,11 @@ header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $uri = explode( '/', $uri );
 
+//echo json_encode(["hi"]);
+
+echo json_encode([getenv('HOST'), getenv('MYSQL_PORT'), getenv('DB_NAME')]);
+exit(1);
+
 $dbAccess = new BkGetW(
     getenv('HOST'),
     getenv('MYSQL_PORT'),

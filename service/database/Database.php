@@ -11,12 +11,12 @@ abstract class Database
     public function __construct(string $host, string $port, string $dbName, string $user, string $password)
     {
         try {
-            $this->connection = new PDO(
+            $this->connection = new \PDO(
                 "mysql:host=$host;port=$port;dbname=$dbName",
                 $user,
                 $password);
         }
-        catch (PDOException $e)
+        catch (\PDOException $e)
         {
             exit($e->getMessage());
         }
