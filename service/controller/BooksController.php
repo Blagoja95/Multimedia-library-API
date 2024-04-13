@@ -7,7 +7,7 @@ class BooksController extends Controller
    {
        switch ($_SERVER["REQUEST_METHOD"]) {
            case 'GET':
-               $this->handleRead((string) $args[0][2] ?? '', (string) $args[0][3] ?? '');
+               $this->handleRead($args[0][2] ?? '', $args[0][3] ?? '');
                break;
 
            case 'POST':
@@ -45,26 +45,22 @@ class BooksController extends Controller
             $res = $this->dbAccess->getAllResults();
         }
 
-        if($res[0] !== false)
+        $notEmpty = sizeof($res) !== 0;
+
+        if($notEmpty && $res[0] !== false)
         {
           $this->createOkResponse($res);
         }
+        else if ($notEmpty && $res[0] === false)
+        {
+            $this->createNotFoundResponse($res[1]);
+        }
         else
         {
-            header('HTTP/1.1 400	Bad Request');
-
-            echo json_encode(["status" => 0, "info" => $res[1]]);
+            $this->createNoContentResponse();
         }
-   }
 
-   protected function createOkResponse(...$res)
-   {
-       header('HTTP/1.1 200 OK');
-
-       echo json_encode([
-           "status" => 1,
-           "data" => $res
-       ]);
+       exit();
    }
 
     protected function handleCreate()

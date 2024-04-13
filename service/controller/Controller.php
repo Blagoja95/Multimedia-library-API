@@ -22,8 +22,25 @@ class Controller
         $this->createOkResponse();
     }
 
-    protected function createOkResponse(...$args)
+    protected function createOkResponse(array $res = [])
     {
-        echo json_encode("ToDo");
+        header('HTTP/1.1 200 OK');
+
+        echo json_encode([
+            "size" => sizeof($res),
+            "data" => $res
+        ]);
+    }
+
+    protected function createNotFoundResponse(string $msg)
+    {
+        header('HTTP/1.1 400	Bad Request');
+
+        echo json_encode(["info" => $msg]);
+    }
+
+    protected function createNoContentResponse()
+    {
+        header('HTTP/1.1 204 No Content');
     }
 }
