@@ -1,15 +1,13 @@
 FROM php:8.1-fpm-alpine
 
+RUN docker-php-ext-install pdo pdo_mysql
+
 ENV COMPOSER_ALLOW_SUPERUSER=1
 
-RUN docker-php-ext-install mysqli pdo pdo_mysql
+COPY --from=composer:2.4 /usr/bin/composer /usr/bin/composer
 
-#RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
-
-COPY --from=composer:2.4 /user/bin/composer /user/bin/composer
-
-COPY ./service/composer.* ./
+COPY ./service/ ./
 
 RUN composer install
 
-COPY ./service .
+RUN composer dump-autoload --optimize

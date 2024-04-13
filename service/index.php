@@ -1,5 +1,4 @@
 <?php
-require 'bootstrap.php';
 require 'vendor/autoload.php';
 
 use controller\BooksController as BkCntrl;
@@ -14,20 +13,20 @@ header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $uri = explode( '/', $uri );
 
-//echo json_encode(["hi"]);
-
-echo json_encode([getenv('HOST'), getenv('MYSQL_PORT'), getenv('DB_NAME')]);
-exit(1);
-
+// TODO: loader
 $dbAccess = new BkGetW(
-    getenv('HOST'),
-    getenv('MYSQL_PORT'),
-    getenv('DB_NAME'),
-    getenv('MYSQL_USERNAME'),
-    getenv('MYSQL_PASSWORD'));
+    $_ENV['MYSQL_HOST'],
+    $_ENV['MYSQL_PORT'],
+    $_ENV['MYSQL_DB_NAME'],
+    $_ENV['MYSQL_USERNAME'],
+    $_ENV['MYSQL_PASSWORD']);
 
 $path = [
     "books" => new BkCntrl($dbAccess),
+
+    "songs" => new \controller\Controller($dbAccess),
+
+    "videos" => new \controller\Controller($dbAccess),
 
     "users" => new \controller\Controller($dbAccess),
 
