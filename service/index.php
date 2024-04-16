@@ -1,8 +1,11 @@
 <?php
 require 'vendor/autoload.php';
 
-use controller\BooksController as BkCntrl;
+use controller\BooksController as BkCtrl;
 use database\BooksGetaway as BkGetW;
+
+use controller\UserController as UsrCtrl;
+use database\UserGetaway as UsrGetW;
 
 header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json; charset=UTF-8");
@@ -21,14 +24,21 @@ $dbAccess = new BkGetW(
     $_ENV['MYSQL_USERNAME'],
     $_ENV['MYSQL_PASSWORD']);
 
+$dbAccessUsr = new UsrGetW(
+    $_ENV['MYSQL_HOST'],
+    $_ENV['MYSQL_PORT'],
+    $_ENV['MYSQL_DB_NAME'],
+    $_ENV['MYSQL_USERNAME'],
+    $_ENV['MYSQL_PASSWORD']);
+
 $path = [
-    "books" => new BkCntrl($dbAccess),
+    "security" => new BkCtrl($dbAccess),
 
     "songs" => new \controller\Controller($dbAccess),
 
     "videos" => new \controller\Controller($dbAccess),
 
-    "users" => new \controller\Controller($dbAccess),
+    "users" => new UsrCtrl($dbAccessUsr),
 
     "authors" => new \controller\Controller($dbAccess)
 ];

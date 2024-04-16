@@ -6,35 +6,7 @@ use database\PDOException;
 
 class BooksGetaway extends Database
 {
-    public function getAllResults(): array
-    {
-        try {
-            return $this
-                ->connection
-                ->query('SELECT * FROM books')
-                ->fetchAll(\PDO::FETCH_ASSOC);
-
-        } catch (\PDOException $e)
-        {
-            return [false, $e->getMessage()];
-        }
-    }
-
-    public function getResultByOneParam($param, $val)
-    {
-        $val = is_numeric($val) ? $val : "'" . $val . "'";
-
-        try {
-            return $this
-                ->connection
-                ->query("SELECT * FROM books WHERE $param = $val;")
-                ->fetchAll(\PDO::FETCH_ASSOC);
-
-        } catch (\PDOException $e)
-        {
-            return [false, $e->getMessage()];
-        }
-    }
+    protected $table = "books";
 
     public function update($id, Array $input)
     {
@@ -44,7 +16,7 @@ class BooksGetaway extends Database
         }
 
         $statement = "
-            UPDATE books
+            UPDATE $this->table 
             SET 
                 title = :title,
                 genre  = :genre,
@@ -78,7 +50,7 @@ class BooksGetaway extends Database
         }
 
         $statement = "
-            INSERT INTO books 
+            INSERT INTO $this->table 
                 (title, genre, author_id, realese_date, description)
             VALUES
                 (:title, :genre, :author_id, :realese_date, :description);
@@ -96,28 +68,6 @@ class BooksGetaway extends Database
                 'realese_date' => $input['realese_date'] ?? null,
                 'description' => $input['description'] ?? null,
             ));
-
-            return 1;
-        } catch (\PDOException $e) {
-            return [false, $e->getMessage()];
-        }
-    }
-
-    public function delete($id)
-    {
-        if(!is_numeric($id))
-        {
-            return -1;
-        }
-
-        $statement = "
-            DELETE FROM books
-            WHERE id = :id;
-        ";
-
-        try {
-            $statement = $this->connection->prepare($statement);
-            $statement->execute(array('id' => $id));
 
             return 1;
         } catch (\PDOException $e) {

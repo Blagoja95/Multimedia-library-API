@@ -43,4 +43,14 @@ class Controller
     {
         header('HTTP/1.1 204 No Content');
     }
+
+    protected function createUnauthorizedResponse()
+    {
+        header("HTTP/1.1 401 Unauthorized");
+    }
+
+    protected function createForbiddenResponse()
+    {
+        header("HTTP/1.1 403 Forbidden");
+    }
 }

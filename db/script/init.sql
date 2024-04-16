@@ -25,3 +25,17 @@ VALUES (10, "To Kill a Mockingbird", "Fiction", 1, "1960-07-11",
        (40, "The Great Gatsby", "Fiction", 4, "1925-04-10",
         "A novel by F. Scott Fitzgerald set in the Roaring Twenties, exploring themes of decadence, idealism, and the American Dream."),
        (50, "Harry Potter and the Philosopher's Stone", "Fantasy", 5, "1997-06-26", "The first book in the Harry Potter series by J.K. Rowling, following the journey of a young wizard, Harry Potter, and his friends at Hogwarts School of Witchcraft and Wizardry.");
+
+CREATE TABLE IF NOT EXISTS users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    fname VARCHAR(255),
+    lname VARCHAR(255),
+    email VARCHAR(255) UNIQUE,
+    password VARCHAR(255),
+    profile_img_id INT,
+    about TEXT
+);
+
+INSERT INTO users (id, fname, lname, email, password, profile_img_id, about)
+VALUES (100, "Petar", "Petrovic", "ppero@gmail.com", "$2a$12$vRgtTccJ0xM.EQdLpq9ZvO4Rihj1R7qcYhCGiAJhulxJl/M3/WZqu", 20, "Hi"),
+       (200, "Marko", "Markovic", "marakan@gmail.com", "$2a$12$vRgtTccJ0xM.EQdLpq9ZvO4Rihj1R7qcYhCGiAJhulxJl/M3/WZqu", 10, "Hi again"),

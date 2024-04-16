@@ -7,6 +7,7 @@ use PDO;
 abstract class Database
 {
     public $connection;
+    protected $table = null;
 
     public function __construct(string $host, string $port, string $dbName, string $user, string $password)
     {
@@ -20,6 +21,11 @@ abstract class Database
         {
             exit($e->getMessage());
         }
+
+        if ($this->table === null)
+        {
+            throw new \Error("Missing Database table name property!", 404);
+        }
     }
 
     /**
@@ -30,5 +36,63 @@ abstract class Database
         return $this->connection;
     }
 
-    abstract public function getAllResults();
+    public function getAllResults(): array
+    {
+        try {
+            return $this
+                ->connection
+                ->query("SELECT * FROM $this->table")
+                ->fetchAll(\PDO::FETCH_ASSOC);
+
+        } catch (\PDOException $e)
+        {
+            return [false, $e->getMessage()];
+        }
+    }
+
+    public function getResultByOneParam($param, $val)
+    {
+        $val = is_numeric($val) ? $val : "'" . $val . "'";
+
+        try {
+            return $this
+                ->connection
+                ->query("SELECT * FROM $this->table WHERE $param = $val;")
+                ->fetchAll(\PDO::FETCH_ASSOC);
+
+        } catch (\PDOException $e)
+        {
+            return [false, $e->getMessage()];
+        }
+    }
+
+    public function delete($id)
+    {
+        if(!is_numeric($id))
+        {
+            return -1;
+        }
+
+        $statement = "DELETE FROM $this->table WHERE id = :id;";
+
+        try {
+            $statement = $this->connection->prepare($statement);
+            $statement->execute(array('id' => $id));
+
+            return 1;
+        } catch (\PDOException $e) {
+            return [false, $e->getMessage()];
+        }
+    }
+
+    public function validate($data){
+
+        $data = trim($data);
+
+        $data = stripslashes($data);
+
+        $data = htmlspecialchars($data);
+
+        return $data;
+    }
 }
