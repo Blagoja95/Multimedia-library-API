@@ -31,6 +31,8 @@ services:
         MYSQL_DB_NAME: ${MYSQL_DB_NAME}
         MYSQL_USERNAME: ${MYSQL_USERNAME}
         MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+        SECRET_KEY: ${SECRET_KEY}
+        SERVER_NAME: ${SERVER_NAME}
         XDEBUG_MODE: "${XDEBUG_MODE:-off}"
       networks:
         - lib-net

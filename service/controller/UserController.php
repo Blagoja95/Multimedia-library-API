@@ -2,6 +2,8 @@
 
 namespace controller;
 
+use security\JwtManager;
+
 class UserController extends Controller
 {
     public function listen(...$args)
@@ -41,11 +43,21 @@ class UserController extends Controller
                 $this->loginUser();
                 break;
 
+            case "check":
+                self::checkAuthHeader();
+                $this->checkUserToken();
+                break;
+
             default;
                 $this->createNotFoundResponse();
                 break;
         }
 
+    }
+
+    private function handleDelete()
+    {
+     // TODO
     }
 
     private function loginUser()
@@ -70,10 +82,7 @@ class UserController extends Controller
             $this->echoMsgWithExit(["status" => 0, "msg" => "Wrong password!"]);
         }
 
-        unset($user["password"]);
-
-        //TODO add JWT prop
-        $this->createOkResponse([$user]);
+        self::genTknReturnResp($user);
     }
 
     private function createUser()
@@ -83,9 +92,39 @@ class UserController extends Controller
 
         $res = $this->dbAccess->create();
 
-        unset($res[0]["password"]);
+        if($res[0] === false)
+        {
+            self::createNotFoundResponse($res[1]);
 
-        $this->createOkResponse($res);
+            exit(0);
+        }
+
+        self::genTknReturnResp($res[0]);
+    }
+
+    private function genTknReturnResp($data)
+    {
+        unset($data["password"]);
+
+        $tknMngr = new JwtManager($data["email"]);
+
+        $data["btoken"] = $tknMngr->createToken();
+
+        $this->createOkResponse([$data]);
+    }
+
+    private function checkUserToken()
+    {
+        if (!isset($_REQUEST["email"]))
+        {
+            self::createNotFoundResponse("Missing email value");
+
+            exit(0);
+        }
+
+        $jwtMngr = new JwtManager($_REQUEST["email"]);
+
+        return $jwtMngr->validateToken(self::getBtoken(), $_REQUEST["email"]);
     }
 
     private function validateCredentials()

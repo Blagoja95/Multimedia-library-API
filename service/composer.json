@@ -4,6 +4,6 @@
     "firebase/php-jwt": "^6.10"
   },
   "autoload": {
-      "classmap" : ["controller", "database"]
+      "classmap" : ["controller", "database", "security"]
   }
 }

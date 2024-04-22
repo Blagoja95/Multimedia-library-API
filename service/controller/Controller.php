@@ -22,6 +22,25 @@ class Controller
         $this->createOkResponse();
     }
 
+    protected function checkAuthHeader()
+    {
+        if(!isset($_SERVER["HTTP_AUTHORIZATION"])
+        || !str_contains($_SERVER["HTTP_AUTHORIZATION"], "Bearer"))
+        {
+            self::createForbiddenResponse();
+
+            self::returnInfoMsg("User must be logged in!");
+            exit();
+        }
+    }
+
+    protected function getBtoken()
+    {
+        $this->checkAuthHeader();
+
+        return explode(' ', $_SERVER["HTTP_AUTHORIZATION"])[1];
+    }
+
     protected function createOkResponse(array $res = [])
     {
         header('HTTP/1.1 200 OK');
@@ -34,8 +53,13 @@ class Controller
 
     protected function createNotFoundResponse(string $msg)
     {
-        header('HTTP/1.1 400	Bad Request');
+        header('HTTP/1.1 400 Bad Request');
 
+        self::returnInfoMsg($msg);
+    }
+
+    protected function returnInfoMsg(string $msg)
+    {
         echo json_encode(["info" => $msg]);
     }
 
