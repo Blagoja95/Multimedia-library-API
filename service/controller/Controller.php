@@ -2,6 +2,7 @@
 namespace controller;
 
 use database\Database;
+use security\JwtManager;
 
 class Controller
 {
@@ -22,10 +23,9 @@ class Controller
         $this->createOkResponse();
     }
 
-    protected function checkAuthHeader()
+    protected function checkBtokenCookie()
     {
-        if(!isset($_SERVER["HTTP_AUTHORIZATION"])
-        || !str_contains($_SERVER["HTTP_AUTHORIZATION"], "Bearer"))
+        if(empty($_COOKIE["btoken"]))
         {
             self::createForbiddenResponse();
 
@@ -36,19 +36,26 @@ class Controller
 
     protected function getBtoken()
     {
-        $this->checkAuthHeader();
+        $this->checkBtokenCookie();
 
-        return explode(' ', $_SERVER["HTTP_AUTHORIZATION"])[1];
+        return $_COOKIE["btoken"];
     }
 
-    protected function createOkResponse(array $res = [])
+    protected function createOkResponse(array $res = [], bool $data = true)
     {
         header('HTTP/1.1 200 OK');
 
-        echo json_encode([
-            "size" => sizeof($res),
-            "data" => $res
-        ]);
+        if ($data)
+        {
+            echo json_encode([
+                "size" => sizeof($res),
+                "data" => $res
+            ]);
+
+            exit(0);
+        }
+
+        echo json_encode($res);
     }
 
     protected function createNotFoundResponse(string $msg)
@@ -56,6 +63,13 @@ class Controller
         header('HTTP/1.1 400 Bad Request');
 
         self::returnInfoMsg($msg);
+    }
+
+    protected function echoMsgWithExit($array)
+    {
+        echo json_encode($array);
+
+        exit();
     }
 
     protected function returnInfoMsg(string $msg)

@@ -32,7 +32,7 @@ $dbAccessUsr = new UsrGetW(
     $_ENV['MYSQL_PASSWORD']);
 
 $path = [
-    "security" => new BkCtrl($dbAccess),
+    "books" => new BkCtrl($dbAccess),
 
     "songs" => new \controller\Controller($dbAccess),
 
@@ -43,9 +43,13 @@ $path = [
     "authors" => new \controller\Controller($dbAccess)
 ];
 
-if ($path[$uri[1]])
+if ($uri[1] === 'v1' && isset($path[$uri[2]]))
 {
-    $path[$uri[1]]->listen($uri);
+    $class = $uri[2];
+
+    array_shift($uri);
+
+    $path[$class]->listen($uri);
 }
 else
 {

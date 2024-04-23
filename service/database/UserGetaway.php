@@ -6,6 +6,55 @@ class UserGetaway extends Database
 {
     protected $table = "users";
 
+    public function update($input)
+    {
+        if(!property_exists($input, "id"))
+            return -1;
+
+        $prof_true = property_exists($input, "profile_img_id");
+        $about_true = property_exists($input, "about");
+
+        $profile = $prof_true ? ",profile_img_id = ?" : "";
+        $about = $about_true ? ",about = ?" : "";
+
+        $statement = "
+            UPDATE $this->table 
+            SET 
+            fname = ?,
+            lname  = ?"
+            . $profile
+            . $about
+            . "WHERE id = ?;";
+
+
+        try {
+            $statement = $this->connection->prepare($statement);
+
+            $statement->bindValue(1, $input->fname);
+            $statement->bindValue(2, $input->lname);
+            $statement->bindValue(5,  $input->id);
+
+            if($prof_true)
+                $statement->bindValue(3, $input->profile_img_id);
+
+            if($about_true)
+                $statement->bindValue(4, $input->about);
+
+            $status = $statement->execute();
+
+            if ($status)
+            {
+                return $this->getResultByOneParam("id", $input->id);
+            }
+            else
+            {
+                return [false, "Error fetching user updated information."];
+            }
+        } catch (\PDOException $e) {
+            return [false, $e->getMessage()];
+        }
+    }
+
     public function create()
     {
         $statement = "
@@ -36,7 +85,7 @@ class UserGetaway extends Database
             }
             else
             {
-                return null;
+                return [false, "Error fetching newly created user information."];
             }
         } catch (\PDOException $e) {
             return [false, $e->getMessage()];

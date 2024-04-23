@@ -3,6 +3,8 @@
 namespace security;
 
 use DateTimeImmutable;
+use DateTimeZone;
+use Firebase\JWT\ExpiredException;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 
@@ -13,24 +15,24 @@ class JwtManager
     private $expire;
     private $serverName;
 
-    public function __construct(private $email, $exparation_min = "60")
+    public function __construct($exparation_min = "60")
     {
         $this->secretKey = $_ENV['SECRET_KEY'];
         $this->serverName = $_ENV['SERVER_NAME'];
 
 
-        $this->issuedAt = new DateTimeImmutable();
+        $this->issuedAt = new DateTimeImmutable("now", new DateTimeZone("UTC"));
         $this->expire = $this->issuedAt->modify("+$exparation_min minutes")->getTimestamp();
     }
 
-    public function createToken()
+    public function createToken($email)
     {
         $data = [
             'iat' => $this->issuedAt->getTimestamp(),
             'exp' => $this->expire,
             'iss' => $this->serverName,
             'nbf' => $this->issuedAt->getTimestamp(),
-            'email' => $this->email
+            'email' => $email
         ];
 
         return JWT::encode(
@@ -40,23 +42,16 @@ class JwtManager
         );
     }
 
-    public function validateToken($token, $email)
-    {
-        $d = $this->decodeToken($token);
-        $time = new DateTimeImmutable();
-
-        if ($d->exp > $time->getTimestamp())
-            return [false, "Token Expired"];
-
-        if($d->email !== $email)
-            return [false, "Mail doesn't mach"];
-
-        return [true];
-    }
-
     public function decodeToken($token)
     {
-        return JWT::decode($token, new Key($this->secretKey, 'HS512'));
+        try
+        {
+            return JWT::decode($token, new Key($this->secretKey, 'HS512'));
+        }
+        catch (ExpiredException $e)
+        {
+            return [false, "error" => $e->getMessage()];
+        }
     }
 
 }

@@ -44,8 +44,11 @@ class UserController extends Controller
                 break;
 
             case "check":
-                self::checkAuthHeader();
-                $this->checkUserToken();
+                $this->handleCheckTkn();
+                break;
+
+                case "logout":
+                $this->handleLogout();
                 break;
 
             default;
@@ -57,7 +60,62 @@ class UserController extends Controller
 
     private function handleDelete()
     {
-     // TODO
+        $d = self::checkUserToken();
+
+        $res = $this->dbAccess->delete($d["id"]);
+
+        if(is_numeric($res) && $res === 1)
+        {
+            setcookie("btoken", '', -1, '/');
+
+            $this->createOkResponse(["info" => "Your account hase been successfully deleted.", "email" => $d["email"]]);
+        }
+
+        if(empty($res[0]))
+        {
+            $this->createNotFoundResponse($res[1]);
+        }
+    }
+
+    private function handleLogout()
+    {
+        self::checkUserToken();
+
+        setcookie("btoken", '', -1, '/');
+
+        self::createOkResponse(["info" => "Successfully logged out."], false);
+    }
+
+    private function handleCheckTkn()
+    {
+        self::createOkResponse(self::checkUserToken());
+    }
+
+    protected function checkUserToken()
+    {
+        $jwtMngr = new JwtManager();
+
+        $decodedTkn = $jwtMngr->decodeToken(self::getBtoken());
+
+        if(!is_object($decodedTkn) && empty($decodedTkn[0]) && isset($decodedTkn["error"]))
+        {
+            self::createUnauthorizedResponse();
+
+            self::echoMsgWithExit($decodedTkn);
+        }
+
+        $res = $this->dbAccess->getResultByOneParam("email", $decodedTkn->email);
+
+        if(empty($res[0]))
+        {
+            self::createUnauthorizedResponse();
+
+            self::echoMsgWithExit(["status" => 0, "msg" => "No user with email " . $decodedTkn->email . " not found!"]);
+
+            exit();
+        }
+
+        return [true, "email" => $decodedTkn->email, "id" => $res[0]["id"]];
     }
 
     private function loginUser()
@@ -70,7 +128,7 @@ class UserController extends Controller
         {
             $this->createUnauthorizedResponse();
 
-            $this->echoMsgWithExit(["status" => 0, "msg" => "No user with email " . $_POST["email"] . " found!"]);
+            $this->echoMsgWithExit(["status" => 0, "msg" => "No user with email " . $_POST["email"] . " not found!"]);
         }
 
         $user = $user[0];
@@ -102,29 +160,39 @@ class UserController extends Controller
         self::genTknReturnResp($res[0]);
     }
 
+    private function handleUpdate()
+    {
+        $d = self::checkUserToken();
+
+        $body = json_decode(file_get_contents("php://input"));
+
+        $body->email= $d["email"];
+        $body->id = $d["id"];
+
+        $res = $this->dbAccess->update($body);
+
+        if(empty($res[0]))
+        {
+            self::createUnauthorizedResponse();
+
+            self::echoMsgWithExit(["status" => 0, "msg" => $res[1]]);
+
+            exit();
+        }
+
+        self::createOkResponse($res);
+    }
+
     private function genTknReturnResp($data)
     {
         unset($data["password"]);
 
-        $tknMngr = new JwtManager($data["email"]);
-
-        $data["btoken"] = $tknMngr->createToken();
+        setcookie("btoken",
+            (new JwtManager())->createToken($data["email"]),
+            (new \DateTimeImmutable("", new \DateTimeZone("UTC")))->getTimestamp() + 3600,
+            '/', '', false, true);
 
         $this->createOkResponse([$data]);
-    }
-
-    private function checkUserToken()
-    {
-        if (!isset($_REQUEST["email"]))
-        {
-            self::createNotFoundResponse("Missing email value");
-
-            exit(0);
-        }
-
-        $jwtMngr = new JwtManager($_REQUEST["email"]);
-
-        return $jwtMngr->validateToken(self::getBtoken(), $_REQUEST["email"]);
     }
 
     private function validateCredentials()
@@ -188,12 +256,6 @@ class UserController extends Controller
 
             $this->echoMsgWithExit(["status" => "error", "message" => "Parameter can't be more then 255 characters long"]);
         }
-    }
-    private function echoMsgWithExit($array)
-    {
-        echo json_encode($array);
-
-        exit();
     }
 
     public function handleRead(string $path1 = '', string $path2 = '')

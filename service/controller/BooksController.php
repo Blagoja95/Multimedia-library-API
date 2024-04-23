@@ -70,7 +70,6 @@ class BooksController extends Controller
 
     protected function handleUpdate()
     {
-
     }
 
     protected function handleDelete()
