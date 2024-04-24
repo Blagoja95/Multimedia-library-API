@@ -7,7 +7,7 @@ use PDO;
 abstract class Database
 {
     public $connection;
-    protected $table = null;
+    public $table = null;
 
     public function __construct(string $host, string $port, string $dbName, string $user, string $password)
     {
@@ -79,7 +79,12 @@ abstract class Database
             $statement = $this->connection->prepare($statement);
             $statement->execute(array('id' => $id));
 
-            return 1;
+            if($statement->rowCount() > 0)
+            {
+                return 1;
+            }
+
+            return 0;
         } catch (\PDOException $e) {
             return [false, $e->getMessage()];
         }

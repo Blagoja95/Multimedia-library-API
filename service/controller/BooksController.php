@@ -53,7 +53,7 @@ class BooksController extends Controller
         }
         else if ($notEmpty && $res[0] === false)
         {
-            $this->createNotFoundResponse($res[1]);
+            $this->createBadReqResponse($res[1]);
         }
         else
         {
@@ -65,20 +65,77 @@ class BooksController extends Controller
 
     protected function handleCreate()
     {
+        $d = self::checkUserToken();
 
+        $body = json_decode(file_get_contents("php://input"));
+        $body->creator_id = $d["id"];
+
+        $res = $this->dbAccess->create($body);
+
+        if(empty($res[0]))
+        {
+            self::createUnauthorizedResponse();
+
+            self::echoMsgWithExit(["status" => 0, "msg" => "Something went wrong!", "sys_msg" => $res[1]]);
+
+            exit();
+        }
+
+        self::createOkResponse($res);
     }
 
-    protected function handleUpdate()
+    private function handleUpdate()
     {
+        $d = self::checkUserToken();
+
+        $body = json_decode(file_get_contents("php://input"));
+
+        $res = $this->dbAccess->update($body);
+
+        if(empty($res[0]))
+        {
+            self::createUnauthorizedResponse();
+
+            self::echoMsgWithExit(["status" => 0, "msg" => "Something went wrong!", "sys_msg" => $res[1] ?? null]);
+
+            exit();
+        }
+
+        self::createOkResponse($res);
     }
 
-    protected function handleDelete()
+    private function handleDelete()
     {
+        $d = self::checkUserToken();
 
-    }
+        $body = json_decode(file_get_contents("php://input"));
 
-    protected function notFoundResponse()
-    {
+        if(!isset($body->id))
+        {
+            self::createUnauthorizedResponse();
 
+            self::echoMsgWithExit(["msg" => "Missing books id!"]);
+        }
+
+        $fbook = $this->dbAccess->getResultByOneParam("id", $body->id);
+
+        if(empty($fbook))
+        {
+            self::createBadReqResponse("Book with id " . $body->id . " not found!");
+
+            exit();
+        }
+
+        $res = $this->dbAccess->delete($body->id);
+
+        if(is_numeric($res) && $res === 1)
+        {
+            $this->createOkResponse(["info" => "Success", "id" => $d["id"]]);
+        }
+
+        if(empty($res[0]))
+        {
+            $this->createBadReqResponse($res[1]);
+        }
     }
 }

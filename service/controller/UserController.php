@@ -26,7 +26,7 @@ class UserController extends Controller
                 break;
 
             default:
-                $this->createNotFoundResponse();
+                $this->createBadReqResponse();
                 break;
         }
     }
@@ -52,7 +52,7 @@ class UserController extends Controller
                 break;
 
             default;
-                $this->createNotFoundResponse();
+                $this->createBadReqResponse();
                 break;
         }
 
@@ -73,7 +73,7 @@ class UserController extends Controller
 
         if(empty($res[0]))
         {
-            $this->createNotFoundResponse($res[1]);
+            $this->createBadReqResponse($res[1]);
         }
     }
 
@@ -88,34 +88,7 @@ class UserController extends Controller
 
     private function handleCheckTkn()
     {
-        self::createOkResponse(self::checkUserToken());
-    }
-
-    protected function checkUserToken()
-    {
-        $jwtMngr = new JwtManager();
-
-        $decodedTkn = $jwtMngr->decodeToken(self::getBtoken());
-
-        if(!is_object($decodedTkn) && empty($decodedTkn[0]) && isset($decodedTkn["error"]))
-        {
-            self::createUnauthorizedResponse();
-
-            self::echoMsgWithExit($decodedTkn);
-        }
-
-        $res = $this->dbAccess->getResultByOneParam("email", $decodedTkn->email);
-
-        if(empty($res[0]))
-        {
-            self::createUnauthorizedResponse();
-
-            self::echoMsgWithExit(["status" => 0, "msg" => "No user with email " . $decodedTkn->email . " not found!"]);
-
-            exit();
-        }
-
-        return [true, "email" => $decodedTkn->email, "id" => $res[0]["id"]];
+        self::createOkResponse(self::checkUserToken(), false);
     }
 
     private function loginUser()
@@ -152,7 +125,7 @@ class UserController extends Controller
 
         if($res[0] === false)
         {
-            self::createNotFoundResponse($res[1]);
+            self::createBadReqResponse($res[1]);
 
             exit(0);
         }
@@ -179,6 +152,8 @@ class UserController extends Controller
 
             exit();
         }
+
+        unset($res[0]['password']);
 
         self::createOkResponse($res);
     }
@@ -283,7 +258,7 @@ class UserController extends Controller
         }
         else if ($notEmpty && $res[0] === false)
         {
-            $this->createNotFoundResponse($res[1]);
+            $this->createBadReqResponse($res[1]);
         }
         else
         {

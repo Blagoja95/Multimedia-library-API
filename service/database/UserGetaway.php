@@ -4,7 +4,7 @@ namespace database;
 
 class UserGetaway extends Database
 {
-    protected $table = "users";
+    public $table = "users";
 
     public function update($input)
     {

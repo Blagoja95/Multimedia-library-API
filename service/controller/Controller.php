@@ -41,6 +41,36 @@ class Controller
         return $_COOKIE["btoken"];
     }
 
+    protected function checkUserToken()
+    {
+        $jwtMngr = new JwtManager();
+
+        $decodedTkn = $jwtMngr->decodeToken(self::getBtoken());
+
+        if(!is_object($decodedTkn) && empty($decodedTkn[0]) && isset($decodedTkn["error"]))
+        {
+            self::createUnauthorizedResponse();
+
+            self::echoMsgWithExit($decodedTkn);
+        }
+
+        $tmp = $this->dbAccess->table;
+        $this->dbAccess->table = 'users';
+        $res = $this->dbAccess->getResultByOneParam("email", $decodedTkn->email);
+        $this->dbAccess->table = $tmp;
+
+        if(empty($res[0]))
+        {
+            self::createUnauthorizedResponse();
+
+            self::echoMsgWithExit(["status" => 0, "msg" => "No user with email " . $decodedTkn->email . " not found!", 'sys_msg' => $res[1] ?? null]);
+
+            exit();
+        }
+
+        return [true, "email" => $decodedTkn->email, "id" => $res[0]["id"]];
+    }
+
     protected function createOkResponse(array $res = [], bool $data = true)
     {
         header('HTTP/1.1 200 OK');
@@ -58,9 +88,16 @@ class Controller
         echo json_encode($res);
     }
 
-    protected function createNotFoundResponse(string $msg)
+    protected function createBadReqResponse(string $msg)
     {
         header('HTTP/1.1 400 Bad Request');
+
+        self::returnInfoMsg($msg);
+    }
+
+    protected function createNotFoundResponse($msg = "Not Found")
+    {
+        header('HTTP/1.1 404 Not Found');
 
         self::returnInfoMsg($msg);
     }

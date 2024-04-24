@@ -6,14 +6,12 @@ use database\PDOException;
 
 class BooksGetaway extends Database
 {
-    protected $table = "books";
+    public $table = "books";
 
-    public function update($id, Array $input)
+    public function update($input)
     {
-        if(count($input) < 2 || !is_numeric($id))
-        {
+        if(!property_exists($input, "id"))
             return -1;
-        }
 
         $statement = "
             UPDATE $this->table 
@@ -28,32 +26,37 @@ class BooksGetaway extends Database
 
         try {
             $statement = $this->connection->prepare($statement);
-            $statement->execute(array(
-                'id' => (int) $id,
-                'title' => $input['title'],
-                'genre'  => $input['genre'],
-                'author_id' => $input['author_id'] ?? null,
-                'realese_date' => $input['realese_date'] ?? null,
-                'description' => $input['description'] ?? null
-            ));
-            return 1;
+
+            $statement->bindValue('title', $input->title);
+            $statement->bindValue('genre', $input->genre);
+            $statement->bindValue('author_id', $input->author_id ?? null);
+            $statement->bindValue('realese_date', $input->realese_date ?? null);
+            $statement->bindValue('description', $input->description ?? null);
+            $statement->bindValue('id', $input->id);
+
+            $status = $statement->execute();
+
+            if ($status)
+            {
+                return $this->getResultByOneParam("id", $input->id);
+            }
+            else
+            {
+                return [false, "Error fetching user updated information."];
+            }
+
         } catch (\PDOException $e) {
             return [false, $e->getMessage()];
         }
     }
 
-    public function create(Array $input)
+    public function create($input)
     {
-        if(count($input) < 2)
-        {
-            return -1;
-        }
-
         $statement = "
             INSERT INTO $this->table 
-                (title, genre, author_id, realese_date, description)
+                (creator_id, title, genre, author_id, realese_date, description)
             VALUES
-                (:title, :genre, :author_id, :realese_date, :description);
+                (:creator_id, :title, :genre, :author_id, :realese_date, :description);
         ";
 
         try {
@@ -61,15 +64,25 @@ class BooksGetaway extends Database
                 ->connection
                 ->prepare($statement);
 
-            $statement->execute(array(
-                'title' => $input['title'],
-                'genre'  => $input['genre'],
-                'author_id' => $input['author_id'] ?? null,
-                'realese_date' => $input['realese_date'] ?? null,
-                'description' => $input['description'] ?? null,
-            ));
+            $statement->bindValue('creator_id', $input->creator_id);
+            $statement->bindValue('title', $input->title);
+            $statement->bindValue('genre', $input->genre);
+            $statement->bindValue('author_id', $input->author_id ?? null);
+            $statement->bindValue('realese_date', $input->realese_date ?? null);
+            $statement->bindValue('description', $input->description ?? null);
 
-            return 1;
+            $status = $statement->execute();
+
+            if($status)
+            {
+                $id = $this->connection->query("SELECT LAST_INSERT_ID()")->fetchAll(\PDO::FETCH_ASSOC);
+
+                return $this->getResultByOneParam("id", $id[0]["LAST_INSERT_ID()"]);
+            }
+            else
+            {
+                return [false, "Error fetching newly created user information."];
+            }
         } catch (\PDOException $e) {
             return [false, $e->getMessage()];
         }
